@@ -9,11 +9,13 @@ export interface MenuItem {
   descKH: string;
   price: number;
   category: Category;
+  subCategory?: string;
   image: string;
 }
 
 export interface CartItem extends MenuItem {
   quantity: number;
+  note?: string;
 }
 
 export type OrderStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';

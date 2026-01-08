@@ -68,7 +68,7 @@ export const INITIAL_CATEGORIES: Category[] = ['Khmer Food', 'Asian Food', 'West
 
 export const UI_TEXT = {
   EN: {
-    welcome: 'Welcome to Baichann',
+    welcome: 'Welcome to Restaurant',
     viewMenu: 'View Menu',
     search: 'Search food...',
     addToCart: 'Add to Cart',
@@ -101,7 +101,7 @@ export const UI_TEXT = {
     edit: 'Edit'
   },
   KH: {
-    welcome: 'សូមស្វាគមន៍មកកាន់ បាយច័ន្ទ',
+    welcome: 'សូមស្វាគមន៍មកកាន់ ភោជនីយដ្ឋាន',
     viewMenu: 'មើលមេនុយ',
     search: 'ស្វែងរកម្ហូប...',
     addToCart: 'បញ្ចូលក្នុងកន្ត្រក',

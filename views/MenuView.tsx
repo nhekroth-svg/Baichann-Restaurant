@@ -12,13 +12,16 @@ interface MenuViewProps {
   onBack: () => void;
   onAddToCart: (item: MenuItem) => void;
   onUpdateQuantity: (id: string, delta: number) => void;
+  onUpdateNote: (id: string, note: string) => void;
   onRemoveFromCart: (id: string) => void;
   onPlaceOrder: (table: string, name?: string) => void;
+  logo: string | null;
+  companyNameEN: string;
+  companyNameKH: string;
 }
 
-const LogoIcon: React.FC<{ className?: string }> = ({ className }) => (
+const DefaultLogoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 400 400" className={className} fill="currentColor">
-    {/* Simplified but recognizable version of the logo for small sizes */}
     <path d="M180,60 C110,60 54,116 54,186 C54,230 76,270 110,295 C90,270 78,240 78,206 C78,136 134,80 204,80 C234,80 262,92 284,110 C260,80 222,60 180,60 Z" />
     <path d="M60,200 L300,200 L270,250 L90,250 Z" />
     <rect x="58" y="194" width="244" height="4" rx="1" />
@@ -26,9 +29,10 @@ const LogoIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const MenuView: React.FC<MenuViewProps> = ({ 
-  menu, categories, cart, language, toggleLanguage, onBack, onAddToCart, onUpdateQuantity, onRemoveFromCart, onPlaceOrder 
+  menu, categories, cart, language, toggleLanguage, onBack, onAddToCart, onUpdateQuantity, onUpdateNote, onRemoveFromCart, onPlaceOrder, logo, companyNameEN, companyNameKH 
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -37,14 +41,29 @@ const MenuView: React.FC<MenuViewProps> = ({
 
   const texts = UI_TEXT[language];
 
+  // Get unique subcategories for the currently selected category
+  const availableSubCategories = useMemo(() => {
+    if (selectedCategory === 'All') return [];
+    const subs = menu
+      .filter(item => item.category === selectedCategory && item.subCategory)
+      .map(item => item.subCategory as string);
+    return Array.from(new Set(subs));
+  }, [menu, selectedCategory]);
+
   const filteredMenu = useMemo(() => {
     return menu.filter(item => {
       const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+      const matchesSubCategory = selectedSubCategory === 'All' || item.subCategory === selectedSubCategory;
       const matchesSearch = item.nameEN.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             item.nameKH.includes(searchQuery);
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesSubCategory && matchesSearch;
     });
-  }, [menu, selectedCategory, searchQuery]);
+  }, [menu, selectedCategory, selectedSubCategory, searchQuery]);
+
+  const handleCategoryChange = (cat: Category | 'All') => {
+    setSelectedCategory(cat);
+    setSelectedSubCategory('All'); // Reset sub-category when switching main category
+  };
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -58,10 +77,14 @@ const MenuView: React.FC<MenuViewProps> = ({
           </svg>
         </button>
         <div className="flex items-center gap-2">
-            <LogoIcon className="w-10 h-10 text-brand-brown" />
+            {logo ? (
+                <img src={logo} className="w-10 h-10 object-contain" alt="Logo" />
+            ) : (
+                <DefaultLogoIcon className="w-10 h-10 text-brand-brown" />
+            )}
             <div className="text-left">
-                <h1 className="khmer-moul text-brand-brown text-sm leading-tight">បាយច័ន្ទ</h1>
-                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Baichann</p>
+                <h1 className="khmer-suwannaphum text-brand-brown text-sm leading-tight font-bold">{companyNameKH}</h1>
+                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">{companyNameEN}</p>
             </div>
         </div>
         <button 
@@ -73,53 +96,88 @@ const MenuView: React.FC<MenuViewProps> = ({
       </header>
 
       {/* Search and Category */}
-      <div className="p-4 bg-white border-b border-gray-100">
-        <div className="relative mb-4">
-          <input 
-            type="text" 
-            placeholder={texts.search}
-            className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-brand-brown/20 focus:bg-white transition-all outline-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </span>
+      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-[60px] z-20">
+        <div className="p-4 pb-2">
+          <div className="relative mb-4">
+            <input 
+              type="text" 
+              placeholder={texts.search}
+              className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-brand-brown/20 focus:bg-white transition-all outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar">
+            <button 
+              onClick={() => handleCategoryChange('All')}
+              className={`px-5 py-2.5 rounded-2xl whitespace-nowrap font-bold transition-all text-sm ${selectedCategory === 'All' ? 'bg-brand-brown text-white shadow-lg shadow-brand-brown/20 scale-105' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+            >
+              {language === 'EN' ? 'All' : 'ទាំងអស់'}
+            </button>
+            {categories.map(cat => (
+              <button 
+                key={cat}
+                onClick={() => handleCategoryChange(cat)}
+                className={`px-5 py-2.5 rounded-2xl whitespace-nowrap font-bold transition-all text-sm ${selectedCategory === cat ? 'bg-brand-brown text-white shadow-lg shadow-brand-brown/20 scale-105' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+              >
+                {language === 'EN' ? cat : cat === 'Khmer Food' ? 'ម្ហូបខ្មែរ' : cat === 'Asian Food' ? 'ម្ហូបអាស៊ី' : cat === 'Western Food' ? 'ម្ហូបបស្ចិមប្រទេស' : cat === 'Drinks' ? 'ភេសជ្ជៈ' : cat === 'Desserts' ? 'បង្អែម' : cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <button 
-            onClick={() => setSelectedCategory('All')}
-            className={`px-5 py-2.5 rounded-2xl whitespace-nowrap font-bold transition-all text-sm ${selectedCategory === 'All' ? 'bg-brand-brown text-white shadow-lg shadow-brand-brown/20 scale-105' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-          >
-            {language === 'EN' ? 'All' : 'ទាំងអស់'}
-          </button>
-          {categories.map(cat => (
+        {/* Sub-Category Row - Only visible if current category has sub-categories */}
+        {availableSubCategories.length > 0 && (
+          <div className="px-4 pb-4 flex gap-2 overflow-x-auto no-scrollbar animate-fadeIn">
             <button 
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-5 py-2.5 rounded-2xl whitespace-nowrap font-bold transition-all text-sm ${selectedCategory === cat ? 'bg-brand-brown text-white shadow-lg shadow-brand-brown/20 scale-105' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+              onClick={() => setSelectedSubCategory('All')}
+              className={`px-4 py-1.5 rounded-full whitespace-nowrap font-bold transition-all text-[11px] uppercase tracking-wider ${selectedSubCategory === 'All' ? 'bg-brand-brown/10 text-brand-brown border border-brand-brown/20' : 'bg-transparent text-gray-400 border border-transparent'}`}
             >
-              {language === 'EN' ? cat : cat === 'Khmer Food' ? 'ម្ហូបខ្មែរ' : cat === 'Asian Food' ? 'ម្ហូបអាស៊ី' : cat === 'Western Food' ? 'ម្ហូបបស្ចិមប្រទេស' : cat === 'Drinks' ? 'ភេសជ្ជៈ' : cat === 'Desserts' ? 'បង្អែម' : cat}
+              {language === 'EN' ? 'All' : 'ទាំងអស់'}
             </button>
-          ))}
-        </div>
+            {availableSubCategories.map(sub => (
+              <button 
+                key={sub}
+                onClick={() => setSelectedSubCategory(sub)}
+                className={`px-4 py-1.5 rounded-full whitespace-nowrap font-bold transition-all text-[11px] uppercase tracking-wider ${selectedSubCategory === sub ? 'bg-brand-brown/10 text-brand-brown border border-brand-brown/20' : 'bg-transparent text-gray-400 border border-transparent'}`}
+              >
+                {sub}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Food List - List View */}
-      <div className="flex flex-col gap-4 p-4 max-w-3xl mx-auto">
-        {filteredMenu.map(item => (
+      <div className="flex flex-col gap-4 p-4 max-w-3xl mx-auto mt-2">
+        {filteredMenu.length === 0 ? (
+          <div className="text-center py-20 opacity-30 flex flex-col items-center">
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="font-bold">No items found</p>
+          </div>
+        ) : filteredMenu.map(item => (
           <div key={item.id} className="bg-white rounded-3xl overflow-hidden shadow-sm flex p-3 gap-4 hover:shadow-md transition-all active:scale-[0.98] group">
             <div className="relative flex-shrink-0">
                 <img src={item.image} alt={item.nameEN} className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-300" />
+                {item.subCategory && (
+                  <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[8px] font-black uppercase tracking-tighter px-2 py-1 rounded-lg shadow-sm text-brand-brown">
+                    {item.subCategory}
+                  </div>
+                )}
             </div>
             <div className="flex flex-col flex-1 min-w-0">
               <div className="flex justify-between items-start gap-2 mb-1">
                 <div className="truncate">
                     <h3 className="text-base sm:text-xl font-bold text-gray-900 leading-tight">
-                        {language === 'EN' ? item.nameEN : item.nameKH}
+                        {language === 'EN' ? item.nameEN : <span className="khmer-suwannaphum">{item.nameKH}</span>}
                     </h3>
                     <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider mt-0.5">{item.nameEN}</p>
                 </div>
@@ -170,18 +228,37 @@ const MenuView: React.FC<MenuViewProps> = ({
               <button onClick={() => setShowCart(false)} className="bg-gray-100 text-gray-400 p-2 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold">×</button>
             </div>
             
-            <div className="space-y-6 mb-10">
+            <div className="space-y-8 mb-10">
               {cart.map(item => (
-                <div key={item.id} className="flex gap-4 items-center">
-                  <img src={item.image} className="w-20 h-20 rounded-2xl object-cover shadow-sm" />
-                  <div className="flex-1">
-                    <h4 className="font-bold text-gray-900 leading-tight">{language === 'EN' ? item.nameEN : item.nameKH}</h4>
-                    <p className="text-brand-brown font-black text-lg">${(item.price * item.quantity).toFixed(2)}</p>
+                <div key={item.id} className="flex flex-col gap-3 pb-6 border-b border-gray-50 last:border-0">
+                  <div className="flex gap-4 items-center">
+                    <img src={item.image} className="w-20 h-20 rounded-2xl object-cover shadow-sm" />
+                    <div className="flex-1">
+                      <h4 className="font-bold text-gray-900 leading-tight">{language === 'EN' ? item.nameEN : item.nameKH}</h4>
+                      <p className="text-brand-brown font-black text-lg">${(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+                      <button onClick={() => onUpdateQuantity(item.id, -1)} className="w-10 h-10 flex items-center justify-center font-black text-gray-400 hover:text-brand-brown transition-colors text-xl">-</button>
+                      <span className="font-black w-6 text-center text-gray-800 text-lg">{item.quantity}</span>
+                      <button onClick={() => onUpdateQuantity(item.id, 1)} className="w-10 h-10 flex items-center justify-center font-black text-brand-brown hover:bg-brand-brown hover:text-white rounded-xl transition-all text-xl">+</button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
-                    <button onClick={() => onUpdateQuantity(item.id, -1)} className="w-10 h-10 flex items-center justify-center font-black text-gray-400 hover:text-brand-brown transition-colors text-xl">-</button>
-                    <span className="font-black w-6 text-center text-gray-800 text-lg">{item.quantity}</span>
-                    <button onClick={() => onUpdateQuantity(item.id, 1)} className="w-10 h-10 flex items-center justify-center font-black text-brand-brown hover:bg-brand-brown hover:text-white rounded-xl transition-all text-xl">+</button>
+                  {/* Note Input below item */}
+                  <div className="relative group">
+                    <input 
+                      type="text"
+                      placeholder="Add a note (e.g. No spicy, Extra rice...)"
+                      className="w-full bg-gray-50/50 border border-gray-100 rounded-xl px-4 py-2 text-xs font-medium text-gray-600 outline-none focus:bg-white focus:ring-1 focus:ring-brand-brown/20 transition-all italic"
+                      value={item.note || ''}
+                      onChange={(e) => onUpdateNote(item.id, e.target.value)}
+                    />
+                    {item.note && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-brown opacity-40">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

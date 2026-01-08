@@ -1,5 +1,5 @@
 {
-  "name": "Baichann QR E-Menu",
+  "name": "E-Menu",
   "description": "A responsive QR-based restaurant e-menu for Baichann, featuring multi-language support (English & Khmer), real-time ordering, and an admin management panel.",
   "requestFramePermissions": []
 }

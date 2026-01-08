@@ -8,9 +8,14 @@ interface HomeViewProps {
   language: Language;
   toggleLanguage: () => void;
   onAdminClick: () => void;
+  logo: string | null;
+  companyNameEN: string;
+  companyNameKH: string;
+  welcomeMessageEN: string;
+  welcomeMessageKH: string;
 }
 
-const Logo: React.FC<{ className?: string }> = ({ className }) => (
+const DefaultLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 400 400" className={className} fill="currentColor">
     {/* Moon Crescent */}
     <path d="M190,40 C110,40 45,105 45,185 C45,245 80,295 130,318 L130,310 C85,288 55,240 55,185 C55,110 115,50 190,50 C235,50 275,72 300,105 C270,80 230,65 190,65 C125,65 70,118 70,185 C70,230 95,270 132,290 L132,282 C100,262 80,225 80,185 C80,125 130,75 190,75 C215,75 240,85 260,100 C235,90 215,85 190,85 C135,85 90,130 90,185 C90,215 105,242 128,260 L128,252 C110,238 100,215 100,185 C100,135 140,95 190,95 C205,95 220,100 232,108 C215,102 205,100 190,100 C145,100 110,135 110,185 C110,205 120,225 135,238 L135,230 C125,220 120,205 120,185 C120,145 152,112 190,112 C200,112 210,115 218,120 C208,115 200,112 190,112 Z" opacity="0.1" />
@@ -32,8 +37,9 @@ const Logo: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const HomeView: React.FC<HomeViewProps> = ({ onViewMenu, language, toggleLanguage, onAdminClick }) => {
+const HomeView: React.FC<HomeViewProps> = ({ onViewMenu, language, toggleLanguage, onAdminClick, logo, companyNameEN, companyNameKH, welcomeMessageEN, welcomeMessageKH }) => {
   const texts = UI_TEXT[language];
+  const activeWelcome = language === 'EN' ? welcomeMessageEN : welcomeMessageKH;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-[#faf7f2] relative overflow-hidden">
@@ -42,16 +48,20 @@ const HomeView: React.FC<HomeViewProps> = ({ onViewMenu, language, toggleLanguag
       
       <div className="flex flex-col items-center max-w-sm w-full animate-fadeIn relative z-10">
         {/* Brand Identity */}
-        <div className="mb-8 flex flex-col items-center text-brand-brown">
-            <Logo className="w-56 h-56 -mb-6" />
-            <h1 className="text-6xl font-normal khmer-moul tracking-normal mb-1">បាយច័ន្ទ</h1>
-            <h2 className="text-4xl font-bold uppercase tracking-[0.25em] -mr-[0.25em] mb-2">Baichann</h2>
+        <div className="mb-8 flex flex-col items-center text-brand-brown text-center">
+            {logo ? (
+                <img src={logo} className="w-56 h-56 object-contain mb-4" alt="Restaurant Logo" />
+            ) : (
+                <DefaultLogo className="w-56 h-56 -mb-6" />
+            )}
+            <h1 className="text-6xl font-normal khmer-suwannaphum tracking-normal mb-1">{companyNameKH}</h1>
+            <h2 className="text-4xl font-bold uppercase tracking-[0.25em] -mr-[0.25em] mb-2">{companyNameEN}</h2>
             <p className="text-[11px] font-bold uppercase tracking-[0.35em] -mr-[0.35em] opacity-80">Restaurant and Garden Bar</p>
         </div>
 
         <div className="w-full space-y-4">
-          <p className="text-center text-lg mb-8 text-gray-700 italic font-medium px-4">
-            {texts.welcome}
+          <p className="text-center text-lg mb-8 text-gray-700 italic font-medium px-4 whitespace-pre-wrap">
+            {activeWelcome}
           </p>
 
           <button 

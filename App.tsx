@@ -20,6 +20,34 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
   });
 
+  const [logo, setLogo] = useState<string | null>(() => {
+    return localStorage.getItem('baichann_logo');
+  });
+
+  const [siteTitle, setSiteTitle] = useState<string>(() => {
+    return localStorage.getItem('baichann_site_title') || 'E-Menu';
+  });
+
+  const [companyNameEN, setCompanyNameEN] = useState<string>(() => {
+    return localStorage.getItem('baichann_name_en') || 'Restaurant';
+  });
+
+  const [companyNameKH, setCompanyNameKH] = useState<string>(() => {
+    return localStorage.getItem('baichann_name_kh') || 'ភោជនីយដ្ឋាន';
+  });
+
+  const [welcomeMessageEN, setWelcomeMessageEN] = useState<string>(() => {
+    return localStorage.getItem('baichann_welcome_en') || UI_TEXT.EN.welcome;
+  });
+
+  const [welcomeMessageKH, setWelcomeMessageKH] = useState<string>(() => {
+    return localStorage.getItem('baichann_welcome_kh') || UI_TEXT.KH.welcome;
+  });
+
+  const [brandColor, setBrandColor] = useState<string>(() => {
+    return localStorage.getItem('baichann_brand_color') || '#701804';
+  });
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem('baichann_orders');
@@ -40,6 +68,40 @@ const App: React.FC = () => {
     localStorage.setItem('baichann_orders', JSON.stringify(orders));
   }, [orders]);
 
+  useEffect(() => {
+    if (logo) {
+      localStorage.setItem('baichann_logo', logo);
+    } else {
+      localStorage.removeItem('baichann_logo');
+    }
+  }, [logo]);
+
+  useEffect(() => {
+    localStorage.setItem('baichann_site_title', siteTitle);
+    document.title = siteTitle;
+  }, [siteTitle]);
+
+  useEffect(() => {
+    localStorage.setItem('baichann_name_en', companyNameEN);
+  }, [companyNameEN]);
+
+  useEffect(() => {
+    localStorage.setItem('baichann_name_kh', companyNameKH);
+  }, [companyNameKH]);
+
+  useEffect(() => {
+    localStorage.setItem('baichann_welcome_en', welcomeMessageEN);
+  }, [welcomeMessageEN]);
+
+  useEffect(() => {
+    localStorage.setItem('baichann_welcome_kh', welcomeMessageKH);
+  }, [welcomeMessageKH]);
+
+  useEffect(() => {
+    localStorage.setItem('baichann_brand_color', brandColor);
+    document.documentElement.style.setProperty('--brand-brown', brandColor);
+  }, [brandColor]);
+
   const toggleLanguage = () => setLanguage(prev => prev === 'EN' ? 'KH' : 'EN');
 
   const addToCart = (item: MenuItem) => {
@@ -48,7 +110,7 @@ const App: React.FC = () => {
       if (existing) {
         return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...item, quantity: 1, note: '' }];
     });
   };
 
@@ -64,6 +126,10 @@ const App: React.FC = () => {
       }
       return i;
     }).filter(i => i.quantity > 0));
+  };
+
+  const updateCartItemNote = (itemId: string, note: string) => {
+    setCart(prev => prev.map(i => i.id === itemId ? { ...i, note } : i));
   };
 
   const placeOrder = (tableNumber: string, customerName?: string) => {
@@ -111,7 +177,6 @@ const App: React.FC = () => {
 
   const deleteCategory = (name: string) => {
     setCategories(prev => prev.filter(c => c !== name));
-    // Optionally handle items with this category (e.g., set to uncategorized)
   };
 
   const updateCategory = (oldName: string, newName: string) => {
@@ -127,6 +192,11 @@ const App: React.FC = () => {
           language={language} 
           toggleLanguage={toggleLanguage} 
           onAdminClick={() => setView('admin')}
+          logo={logo}
+          companyNameEN={companyNameEN}
+          companyNameKH={companyNameKH}
+          welcomeMessageEN={welcomeMessageEN}
+          welcomeMessageKH={welcomeMessageKH}
         />
       )}
       {view === 'menu' && (
@@ -139,8 +209,12 @@ const App: React.FC = () => {
           onBack={() => setView('home')}
           onAddToCart={addToCart}
           onUpdateQuantity={updateQuantity}
+          onUpdateNote={updateCartItemNote}
           onRemoveFromCart={removeFromCart}
           onPlaceOrder={placeOrder}
+          logo={logo}
+          companyNameEN={companyNameEN}
+          companyNameKH={companyNameKH}
         />
       )}
       {view === 'admin' && (
@@ -159,6 +233,20 @@ const App: React.FC = () => {
           addCategory={addCategory}
           deleteCategory={deleteCategory}
           updateCategory={updateCategory}
+          logo={logo}
+          onUpdateLogo={setLogo}
+          brandColor={brandColor}
+          onUpdateBrandColor={setBrandColor}
+          siteTitle={siteTitle}
+          setSiteTitle={setSiteTitle}
+          companyNameEN={companyNameEN}
+          setCompanyNameEN={setCompanyNameEN}
+          companyNameKH={companyNameKH}
+          setCompanyNameKH={setCompanyNameKH}
+          welcomeMessageEN={welcomeMessageEN}
+          setWelcomeMessageEN={setWelcomeMessageEN}
+          welcomeMessageKH={welcomeMessageKH}
+          setWelcomeMessageKH={setWelcomeMessageKH}
         />
       )}
     </div>
